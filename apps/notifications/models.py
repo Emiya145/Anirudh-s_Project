@@ -9,7 +9,11 @@ class Notification(models.Model):
         TARGET_SHORTFALL = "target_shortfall"
 
     created_at = models.DateTimeField(auto_now_add=True)
+    last_seen_at = models.DateTimeField(auto_now=True)
     kind = models.CharField(max_length=30, choices=Kind.choices)
+
+    dedupe_key = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    is_active = models.BooleanField(default=True)
 
     location = models.ForeignKey("core.Location", on_delete=models.CASCADE)
 
@@ -20,4 +24,7 @@ class Notification(models.Model):
     payload = models.JSONField(default=dict, blank=True)
 
     class Meta:
-        indexes = [models.Index(fields=["location", "kind", "created_at"]) ]
+        indexes = [
+            models.Index(fields=["location", "kind", "created_at"]),
+            models.Index(fields=["location", "kind", "is_active", "last_seen_at"]),
+        ]

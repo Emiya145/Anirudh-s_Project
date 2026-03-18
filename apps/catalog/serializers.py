@@ -7,7 +7,17 @@ from .models import Product, Recipe, RecipeItem
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ["id", "name", "sku", "is_active"]
+        fields = [
+            "id",
+            "name",
+            "sku",
+            "is_active",
+            "description",
+            "image_url",
+            "base_price",
+            "is_public",
+            "category",
+        ]
 
 
 class RecipeItemSerializer(serializers.ModelSerializer):

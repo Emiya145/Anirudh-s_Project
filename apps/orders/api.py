@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from apps.accounts.permissions import IsAdminOrManagerOrStaff
+from apps.core.viewset_mixins import LocationScopedQuerysetMixin
 
 from .models import CustomerOrder
 from .serializers import (
@@ -13,7 +14,7 @@ from .serializers import (
 )
 
 
-class CustomerOrderViewSet(viewsets.ModelViewSet):
+class CustomerOrderViewSet(LocationScopedQuerysetMixin, viewsets.ModelViewSet):
     queryset = CustomerOrder.objects.all().order_by("-ordered_at", "-id")
     serializer_class = CustomerOrderSerializer
     permission_classes = [IsAdminOrManagerOrStaff]

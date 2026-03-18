@@ -8,6 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 env = environ.Env(
     DJANGO_DEBUG=(bool, False),
+    DB_PORT=(int, 3306),
 )
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 environ.Env.read_env(os.path.join(BASE_DIR, ".env.local"), overwrite=True)
@@ -35,6 +36,7 @@ INSTALLED_APPS = [
     "apps.production.apps.ProductionConfig",
     "apps.waste.apps.WasteConfig",
     "apps.notifications.apps.NotificationsConfig",
+    "apps.storefront.apps.StorefrontConfig",
 ]
 
 MIDDLEWARE = [
@@ -68,12 +70,42 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-DATABASES = {
-    "default": env.db(
-        "DATABASE_URL",
-        default="postgres://postgres:postgres@localhost:5432/bakery_inventory",
-    )
-}
+db_name = env("DB_NAME", default=None)
+
+if db_name:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.mysql",
+            "NAME": db_name,
+            "USER": env("DB_USER", default="root"),
+            "PASSWORD": env("DB_PASSWORD", default=""),
+            "HOST": env("DB_HOST", default="127.0.0.1"),
+            "PORT": env.int("DB_PORT", default=3306),
+            "OPTIONS": {
+                "charset": "utf8mb4",
+                "init_command": "SET sql_mode='STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'",
+            },
+            "CONN_MAX_AGE": env.int("DB_CONN_MAX_AGE", default=60),
+        }
+    }
+else:
+    DATABASES = {
+        "default": env.db(
+            "DATABASE_URL",
+            default="mysql://root:@127.0.0.1:3306/bakery_inventory",
+        )
+    }
+
+STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
+STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
+STRIPE_SUCCESS_URL = env(
+    "STRIPE_SUCCESS_URL",
+    default="http://localhost:3000/store/success?session_id={CHECKOUT_SESSION_ID}",
+)
+STRIPE_CANCEL_URL = env(
+    "STRIPE_CANCEL_URL",
+    default="http://localhost:3000/store/cancel?session_id={CHECKOUT_SESSION_ID}",
+)
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

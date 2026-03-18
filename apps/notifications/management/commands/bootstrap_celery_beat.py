@@ -39,4 +39,14 @@ class Command(BaseCommand):
             },
         )
 
+        PeriodicTask.objects.update_or_create(
+            name="storefront:expire_unpaid_store_orders",
+            defaults={
+                "interval": every_5_min,
+                "task": "apps.storefront.tasks.expire_unpaid_store_orders",
+                "args": "[30]",
+                "enabled": True,
+            },
+        )
+
         self.stdout.write(self.style.SUCCESS("Celery Beat periodic tasks ensured"))

@@ -98,6 +98,8 @@ class FinishedGoodLot(models.Model):
 class FinishedGoodLedgerEntry(models.Model):
     class Reason(models.TextChoices):
         PRODUCTION = "production"
+        RESERVED = "reserved"
+        RELEASED = "released"
         SALE = "sale"
         WASTE = "waste"
         MANUAL_ADJUSTMENT = "manual_adjustment"

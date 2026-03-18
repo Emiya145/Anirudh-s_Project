@@ -1,14 +1,22 @@
 services:
-  postgres:
-    image: postgres:16
+  mysql:
+    image: mysql:8.0
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
     environment:
-      POSTGRES_DB: bakery_inventory
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      MYSQL_DATABASE: bakery_inventory
+      MYSQL_ROOT_PASSWORD: root
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-proot"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
   redis:
     image: redis:7
@@ -21,10 +29,15 @@ services:
       - .env
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.dev
+      DB_NAME: bakery_inventory
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_HOST: mysql
+      DB_PORT: 3306
     ports:
       - "8000:8000"
     depends_on:
-      - postgres
+      - mysql
       - redis
 
   worker:
@@ -33,9 +46,14 @@ services:
       - .env
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.dev
+      DB_NAME: bakery_inventory
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_HOST: mysql
+      DB_PORT: 3306
     command: ["celery", "-A", "config", "worker", "-l", "info"]
     depends_on:
-      - postgres
+      - mysql
       - redis
 
   beat:
@@ -44,10 +62,15 @@ services:
       - .env
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.dev
+      DB_NAME: bakery_inventory
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_HOST: mysql
+      DB_PORT: 3306
     command: ["celery", "-A", "config", "beat", "-l", "info"]
     depends_on:
-      - postgres
+      - mysql
       - redis
 
 volumes:
-  postgres_data:
+  mysql_data:

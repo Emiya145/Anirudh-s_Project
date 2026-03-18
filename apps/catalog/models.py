@@ -6,6 +6,12 @@ class Product(models.Model):
     sku = models.CharField(max_length=60, unique=True)
     is_active = models.BooleanField(default=True)
 
+    description = models.TextField(blank=True)
+    image_url = models.URLField(blank=True)
+    base_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    is_public = models.BooleanField(default=False)
+    category = models.CharField(max_length=80, blank=True)
+
     def __str__(self) -> str:
         return self.name
 

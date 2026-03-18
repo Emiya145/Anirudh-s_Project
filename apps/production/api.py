@@ -2,12 +2,13 @@ from rest_framework import status, viewsets
 from rest_framework.response import Response
 
 from apps.accounts.permissions import IsAdminOrManagerOrStaff
+from apps.core.viewset_mixins import LocationScopedQuerysetMixin
 
 from .models import ProductionBatch
 from .serializers import ProductionBatchCreateResponseSerializer, ProductionBatchSerializer
 
 
-class ProductionBatchViewSet(viewsets.ModelViewSet):
+class ProductionBatchViewSet(LocationScopedQuerysetMixin, viewsets.ModelViewSet):
     queryset = ProductionBatch.objects.all().order_by("-produced_at", "-id")
     serializer_class = ProductionBatchSerializer
     permission_classes = [IsAdminOrManagerOrStaff]
@@ -15,7 +16,8 @@ class ProductionBatchViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        batch = serializer.save()
+        self.perform_create(serializer)
+        batch = serializer.instance
 
         consumed = getattr(batch, "_consumed", [])
         payload = {
