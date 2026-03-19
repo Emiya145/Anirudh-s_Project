@@ -3,15 +3,17 @@ from datetime import timedelta
 from pathlib import Path
 
 import environ
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+load_dotenv(os.path.join(BASE_DIR, ".env"))
+load_dotenv(os.path.join(BASE_DIR, ".env.local"), override=True)
 
 env = environ.Env(
     DJANGO_DEBUG=(bool, False),
     DB_PORT=(int, 3306),
 )
-environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
-environ.Env.read_env(os.path.join(BASE_DIR, ".env.local"), overwrite=True)
 
 SECRET_KEY = env("DJANGO_SECRET_KEY", default="unsafe-dev-secret-key")
 DEBUG = env.bool("DJANGO_DEBUG", default=False)
@@ -70,30 +72,25 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-db_name = env("DB_NAME", default=None)
+database_url = env("DATABASE_URL", default="")
 
-if db_name:
+if database_url:
+    DATABASES = {"default": env.db("DATABASE_URL")}
+else:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.mysql",
-            "NAME": db_name,
+            "NAME": env("DB_NAME", default="bakery_db"),
             "USER": env("DB_USER", default="root"),
-            "PASSWORD": env("DB_PASSWORD", default=""),
-            "HOST": env("DB_HOST", default="127.0.0.1"),
+            "PASSWORD": env("DB_PASSWORD", default="password"),
+            "HOST": env("DB_HOST", default="localhost"),
             "PORT": env.int("DB_PORT", default=3306),
             "OPTIONS": {
                 "charset": "utf8mb4",
-                "init_command": "SET sql_mode='STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'",
+                "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
             },
             "CONN_MAX_AGE": env.int("DB_CONN_MAX_AGE", default=60),
         }
-    }
-else:
-    DATABASES = {
-        "default": env.db(
-            "DATABASE_URL",
-            default="mysql://root:@127.0.0.1:3306/bakery_inventory",
-        )
     }
 
 STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
